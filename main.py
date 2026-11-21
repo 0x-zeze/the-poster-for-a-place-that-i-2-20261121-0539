@@ -296,11 +296,20 @@ def paint_lighthouse(cx, base_y):
     disc(cx, top_y - 36, 10, INK)
     rect(cx - 1, top_y - 48, 3, 12, INK)
     lamp_y = top_y - 22
-    # light beams left and right, widening wedges
+    # Lamp glow: a soft halo around the lamp room so the light reads
+    # even against the bright sun behind the tower.
+    disc_blend(cx, lamp_y, 30, LIGHT_BEAM, 0.35)
+    disc_blend(cx, lamp_y, 16, SUN_CORE, 0.55)
+    # Light beams left and right: a bright narrow core wedge over a
+    # longer, softer sweep, so the beam visibly reaches across the sky.
     for i, yy in enumerate(range(lamp_y - 10, lamp_y + 11)):
-        spread = 26 + i * 9
-        blend_span(yy, cx - 20 - spread, cx - 20, LIGHT_BEAM, 0.28)
-        blend_span(yy, cx + 20, cx + 20 + spread, LIGHT_BEAM, 0.28)
+        spread = 46 + i * 14
+        blend_span(yy, cx - 20 - spread, cx - 20, LIGHT_BEAM, 0.22)
+        blend_span(yy, cx + 20, cx + 20 + spread, LIGHT_BEAM, 0.22)
+    for i, yy in enumerate(range(lamp_y - 5, lamp_y + 6)):
+        spread = 34 + i * 7
+        blend_span(yy, cx - 20 - spread, cx - 20, LIGHT_BEAM, 0.38)
+        blend_span(yy, cx + 20, cx + 20 + spread, LIGHT_BEAM, 0.38)
 
 
 def paint_cloud_sea():
@@ -333,6 +342,35 @@ def paint_cloud_sea():
         half = int(150 * (1.0 - 0.55 * t))
         blend_span(yy, 512 - half, 512 + half, (255, 196, 110),
                    0.16 * (1.0 - t))
+    # Warm light pool where the lighthouse beam strikes the cloud sea,
+    # directly below the central isle, with horizontal shimmer strokes.
+    disc_blend(512, 762, 96, (255, 200, 120), 0.22)
+    disc_blend(512, 786, 58, (255, 214, 140), 0.28)
+    for yy, half, a in ((736, 120, 0.14), (752, 150, 0.18),
+                        (772, 128, 0.16), (796, 96, 0.14),
+                        (818, 70, 0.10)):
+        blend_span(yy, 512 - half, 512 + half, (255, 205, 130), a)
+
+
+def paint_sailboat(x, y):
+    """A tiny sailboat drifting on the cloud sea: scale and life."""
+    # Wake: a soft pale ellipse under the hull.
+    ellipse(x, y + 14, 34, 5, CLOUD4)
+    # Hull: dark, tapering toward the bow.
+    for j in range(9):
+        span(y + j, x - 22 + j * 2, x + 22 - j * 2, INK)
+    # Mast + tiny pennant.
+    rect(x - 1, y - 44, 3, 44, INK)
+    span(y - 48, x + 2, x + 12, (240, 138, 60))
+    span(y - 47, x + 2, x + 9, (240, 138, 60))
+    # Main sail (sunlit cream) to the right of the mast, jib (pink
+    # shadow side) to the left: two triangles, wide at the boom.
+    for j in range(38):
+        w = int(22 * (1.0 - j / 38.0))
+        span(y - 42 + j, x + 3, x + 3 + w, CREAM_SOFT)
+    for j in range(30):
+        w = int(13 * (1.0 - j / 30.0))
+        span(y - 36 + j, x - 3 - w, x - 3, CLOUD2)
 
 
 def paint_frame():
@@ -360,6 +398,14 @@ def paint_type():
     tag = "THE ISLES ABOVE THE CLOUD SEA"
     sc = 4
     tw2 = text_width(tag, sc)
+    # Thin ornament rules above and below the tagline, slightly wider
+    # than the text, with a dark offset so they read on the bright sky.
+    for ry in (189, 190):
+        span(ry + 1, (W - tw2) // 2 - 96, (W + tw2) // 2 + 96, INK)
+        span(ry, (W - tw2) // 2 - 96, (W + tw2) // 2 + 96, CREAM_SOFT)
+    for ry in (234, 235):
+        span(ry + 1, (W - tw2) // 2 - 96, (W + tw2) // 2 + 96, INK)
+        span(ry, (W - tw2) // 2 - 96, (W + tw2) // 2 + 96, CREAM_SOFT)
     draw_text((W - tw2) // 2, 200, tag, sc, CREAM_SOFT, shadow=INK,
               shadow_dx=2)
     # Small diamond ornaments flanking the tagline.
@@ -441,6 +487,8 @@ def main():
     paint_house(800, 596, 36, 28)
     paint_island(88, 612, 44, 40)
     paint_island(938, 606, 48, 44)
+    # A tiny sailboat drifting on the cloud sea, right of centre.
+    paint_sailboat(712, 872)
     paint_frame()
     paint_type()
     size = write_png(OUT)
